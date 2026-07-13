@@ -175,13 +175,14 @@ static gboolean tick(gpointer data) { Inst *s = data; read_cpu(s); read_mem(s); 
 // ─── CFFI ────────────────────────────────────────────────────────────────────
 static GtkWidget *mklabel(const char *txt, const char *cls) {
   GtkWidget *l = gtk_label_new(txt);
+  gtk_widget_set_valign(l, GTK_ALIGN_CENTER);
   gtk_style_context_add_class(gtk_widget_get_style_context(l), cls);
   return l;
 }
 void *wbcffi_init(const wbcffi_init_info *info, const wbcffi_config_entry *entries, size_t entries_len) {
   Inst *self = g_new0(Inst, 1);
   self->interval = 3;
-  self->icon_size = 26;
+  self->icon_size = 24;
   for (size_t i = 0; i < entries_len; i++) {
     if (!strcmp(entries[i].key, "interval")) { self->interval = atoi(entries[i].value); if (self->interval < 1) self->interval = 1; }
     else if (!strcmp(entries[i].key, "icon-size")) { self->icon_size = atoi(entries[i].value); if (self->icon_size < 8) self->icon_size = 8; }
