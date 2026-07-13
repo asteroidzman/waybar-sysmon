@@ -10,8 +10,6 @@
 #include "waybar_cffi_module.h"
 const size_t wbcffi_version = 1;
 
-#define GLYPH_CPU "\xf3\xb0\xbb\xa0"   // 󰻠 nf-md-cpu-64-bit
-#define GLYPH_RAM "\xf3\xb0\x8d\x9b"   // 󰍛 nf-md-memory
 #define MAXCORES 64
 
 typedef struct { unsigned long long total, idle; } CpuT;
@@ -22,7 +20,19 @@ typedef struct {
   double cpu, core[MAXCORES];
   long mem_total, mem_avail, swap_total, swap_free;   // kB
   double ram; int interval; guint timer;
+  char *icon_dir; int icon_size;
 } Inst;
+
+// Build a GtkImage from an SVG in the icon dir, sized for the bar.
+static GtkWidget *icon_image(Inst *self, const char *name) {
+  char *path = g_build_filename(self->icon_dir, name, NULL);
+  GdkPixbuf *pb = gdk_pixbuf_new_from_file_at_size(path, self->icon_size, self->icon_size, NULL);
+  g_free(path);
+  GtkWidget *img = pb ? gtk_image_new_from_pixbuf(pb) : gtk_image_new();
+  if (pb) g_object_unref(pb);
+  gtk_widget_set_valign(img, GTK_ALIGN_CENTER);
+  return img;
+}
 
 // ─── /proc parsing ───────────────────────────────────────────────────────────
 static double cpu_delta(CpuT *prev, unsigned long long t, unsigned long long idle) {
@@ -84,8 +94,8 @@ static void update_bar(Inst *self) {
   char t[16];
   g_snprintf(t, sizeof t, "%.0f%%", self->cpu); gtk_label_set_text(GTK_LABEL(self->cpu_l), t);
   g_snprintf(t, sizeof t, "%.0f%%", self->ram); gtk_label_set_text(GTK_LABEL(self->ram_l), t);
-  set_level(self->cpu_ic, self->cpu, 60, 80);
-  set_level(self->ram_ic, self->ram, 75, 90);
+  set_level(self->cpu_l, self->cpu, 60, 80);   // colour the % text (icons are fixed-colour images)
+  set_level(self->ram_l, self->ram, 75, 90);
 }
 
 // ─── popover ─────────────────────────────────────────────────────────────────
@@ -171,8 +181,17 @@ static GtkWidget *mklabel(const char *txt, const char *cls) {
 void *wbcffi_init(const wbcffi_init_info *info, const wbcffi_config_entry *entries, size_t entries_len) {
   Inst *self = g_new0(Inst, 1);
   self->interval = 3;
-  for (size_t i = 0; i < entries_len; i++)
+  self->icon_size = 26;
+  for (size_t i = 0; i < entries_len; i++) {
     if (!strcmp(entries[i].key, "interval")) { self->interval = atoi(entries[i].value); if (self->interval < 1) self->interval = 1; }
+    else if (!strcmp(entries[i].key, "icon-size")) { self->icon_size = atoi(entries[i].value); if (self->icon_size < 8) self->icon_size = 8; }
+    else if (!strcmp(entries[i].key, "icon-dir")) { g_free(self->icon_dir); self->icon_dir = g_strdup(entries[i].value); }
+  }
+  if (!self->icon_dir) {
+    const char *dh = g_getenv("XDG_DATA_HOME");
+    self->icon_dir = (dh && *dh) ? g_build_filename(dh, "waybar-sysmon", NULL)
+                                 : g_build_filename(g_get_home_dir(), ".local/share/waybar-sysmon", NULL);
+  }
 
   GtkContainer *root = info->get_root_widget(info->obj);
   self->box = gtk_event_box_new();
@@ -180,9 +199,11 @@ void *wbcffi_init(const wbcffi_init_info *info, const wbcffi_config_entry *entri
   gtk_widget_add_events(self->box, GDK_BUTTON_PRESS_MASK);
   gtk_widget_set_margin_start(self->box, 6); gtk_widget_set_margin_end(self->box, 6);
   GtkWidget *h = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
-  self->cpu_ic = mklabel(GLYPH_CPU, "sm-cpu-icon");
+  self->cpu_ic = icon_image(self, "cpu.svg");
+  gtk_style_context_add_class(gtk_widget_get_style_context(self->cpu_ic), "sm-cpu-icon");
   self->cpu_l  = mklabel("--%", "sm-cpu");
-  self->ram_ic = mklabel(GLYPH_RAM, "sm-ram-icon");
+  self->ram_ic = icon_image(self, "ram.svg");
+  gtk_style_context_add_class(gtk_widget_get_style_context(self->ram_ic), "sm-ram-icon");
   self->ram_l  = mklabel("--%", "sm-ram");
   gtk_box_pack_start(GTK_BOX(h), self->cpu_ic, FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(h), self->cpu_l, FALSE, FALSE, 0);
@@ -206,5 +227,6 @@ void *wbcffi_init(const wbcffi_init_info *info, const wbcffi_config_entry *entri
 void wbcffi_deinit(void *instance) {
   Inst *self = instance;
   if (self->timer) g_source_remove(self->timer);
+  g_free(self->icon_dir);
   g_free(self);
 }

@@ -4,13 +4,15 @@ CFLAGS  ?= -O2 -Wall -Wextra
 CFLAGS  += -fPIC $(shell pkg-config --cflags $(PKGS))
 LDLIBS  += $(shell pkg-config --libs $(PKGS)) -lm
 PREFIX  ?= $(HOME)/.local/lib/waybar
+DATADIR ?= $(HOME)/.local/share/waybar-sysmon
 
 $(PLUGIN): src/sysmon.c
 	$(CC) $(CFLAGS) -shared -o $@ $< $(LDLIBS)
 
 install: $(PLUGIN)
 	install -Dm755 $(PLUGIN) $(PREFIX)/$(PLUGIN)
-	@echo "installed to $(PREFIX)/$(PLUGIN)"
+	install -Dm644 -t $(DATADIR) assets/cpu.svg assets/ram.svg
+	@echo "installed to $(PREFIX)/$(PLUGIN) + icons in $(DATADIR)"
 
 clean:
 	rm -f $(PLUGIN)

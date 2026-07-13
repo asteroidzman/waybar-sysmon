@@ -37,6 +37,11 @@ make install                 # → ~/.local/lib/waybar/libsysmon.so
 |-----|---------|---------|
 | `module_path` | *(required)* | path to `libsysmon.so` |
 | `interval` | 3 | refresh seconds |
+| `icon-size` | 26 | bar icon pixel size |
+| `icon-dir` | `$XDG_DATA_HOME/waybar-sysmon` | dir holding `cpu.svg` / `ram.svg` (installed by `make install`) |
+
+The bar shows crafted image icons (a CPU chip and a memory module); the CPU/RAM
+warn/danger thresholds colour the **percentage text** rather than the icons.
 
 ## style.css
 
