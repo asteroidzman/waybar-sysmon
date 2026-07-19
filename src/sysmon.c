@@ -220,6 +220,7 @@ void *wbcffi_init(const wbcffi_init_info *info, const wbcffi_config_entry *entri
   gtk_box_pack_start(GTK_BOX(h), self->ram_l, FALSE, FALSE, 0);
   gtk_container_add(GTK_CONTAINER(self->box), h);
   wbpop_init(&self->pop, self->box, wbpop_rebuild_cb, self);
+  wbpop_enable_geom_dump(&self->pop, "sysmon");
   self->popover = self->pop.win;
   g_signal_connect(self->box, "button-press-event", G_CALLBACK(on_click), self);
   gtk_container_add(root, self->box);
