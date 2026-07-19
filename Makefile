@@ -15,6 +15,12 @@ install: $(PLUGIN)
 	install -Dm644 -t $(DATADIR) assets/cpu.svg assets/ram.svg
 	@echo "installed to $(PREFIX)/$(PLUGIN) + icons in $(DATADIR)"
 
+test_sysmon: tests/test_sysmon.c src/sysmon.c $(WBCOMMON)/wbcommon.h
+	$(CC) $(CFLAGS) -o $@ tests/test_sysmon.c $(LDLIBS)
+
+test: test_sysmon
+	./test_sysmon
+
 clean:
-	rm -f $(PLUGIN)
-.PHONY: install clean
+	rm -f $(PLUGIN) test_sysmon
+.PHONY: install clean test
