@@ -15,6 +15,8 @@ memory/swap breakdown. Reads `/proc` directly — no external tools.
 
 ## Build & install
 
+Arch Linux: `yay -S waybar-sysmon` (AUR).
+
 Requires `gtk3`, `glib2` (+dev headers) and a C compiler.
 
 ```sh
