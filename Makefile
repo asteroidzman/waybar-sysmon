@@ -6,14 +6,15 @@ CFLAGS  += -fPIC -I$(WBCOMMON) $(shell pkg-config --cflags $(PKGS))
 LDLIBS  += $(shell pkg-config --libs $(PKGS)) -lm
 PREFIX  ?= $(HOME)/.local/lib/waybar
 DATADIR ?= $(HOME)/.local/share/waybar-sysmon
+DESTDIR ?=
 
 $(PLUGIN): src/sysmon.c $(WBCOMMON)/wbcommon.h
 	$(CC) $(CFLAGS) -shared -o $@ $< $(LDLIBS)
 
 install: $(PLUGIN)
-	install -Dm755 $(PLUGIN) $(PREFIX)/$(PLUGIN)
-	install -Dm644 -t $(DATADIR) assets/cpu.svg assets/ram.svg
-	@echo "installed to $(PREFIX)/$(PLUGIN) + icons in $(DATADIR)"
+	install -Dm755 $(PLUGIN) $(DESTDIR)$(PREFIX)/$(PLUGIN)
+	install -Dm644 -t $(DESTDIR)$(DATADIR) assets/cpu.svg assets/ram.svg
+	@echo "installed to $(DESTDIR)$(PREFIX)/$(PLUGIN) + icons in $(DESTDIR)$(DATADIR)"
 
 test_sysmon: tests/test_sysmon.c src/sysmon.c $(WBCOMMON)/wbcommon.h
 	$(CC) $(CFLAGS) -o $@ tests/test_sysmon.c $(LDLIBS)
