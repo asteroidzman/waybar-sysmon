@@ -19,7 +19,14 @@ Arch Linux: `yay -S waybar-sysmon` (AUR).
 
 Requires `gtk3`, `glib2` (+dev headers) and a C compiler.
 
+Uses [waybar-plugin-common](https://github.com/asteroidzman/waybar-plugin-common)
+(git submodule at `common/`) -- clone with `--recursive`, or `git submodule
+update --init` after a plain clone, or `make` fails looking for
+`common/wbcommon.h`.
+
 ```sh
+git clone --recursive https://github.com/asteroidzman/waybar-sysmon.git
+cd waybar-sysmon
 make
 make install                 # → ~/.local/lib/waybar/libsysmon.so
 ```
